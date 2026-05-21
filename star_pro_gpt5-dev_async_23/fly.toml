@@ -1,0 +1,61 @@
+# fly.toml app configuration file generated for staicey-backend-gpt5 on 2025-10-04T16:41:25+02:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'staicey-api-gpt5'
+primary_region = 'syd'
+
+[build]
+
+[env]
+  PORT = '8000'
+  PYTHONPATH = '/app'
+  # Production environment variables
+  DEBUG = 'false'
+  LOG_LEVEL = 'critical'
+  WORKERS = '3'  # Formula: (2 x CPUs) + 1 = (2 x 2) + 1 = 5
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ['app']
+
+  [[http_service.checks]]
+    interval = '30s'
+    timeout = '10s'
+    grace_period = '30s'
+    method = 'GET'
+    path = '/health'
+
+[[services]]
+  protocol = 'tcp'
+  internal_port = 8000
+  processes = ['app']
+
+  [[services.ports]]
+    port = 80
+    handlers = ['http']
+    force_https = true
+
+  [[services.ports]]
+    port = 443
+    handlers = ['tls', 'http']
+
+  [services.concurrency]
+    type = 'connections'
+    hard_limit = 25
+    soft_limit = 20
+
+  [[services.tcp_checks]]
+    interval = '15s'
+    timeout = '2s'
+    grace_period = '1s'
+
+[[vm]]
+  memory = '2gb'
+  cpu_kind = 'performance'
+  cpus = 1
